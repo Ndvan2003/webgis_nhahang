@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>Quản lý Nhà hàng</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+   <script>
+    const role = localStorage.getItem('role');
+    if (role !== 'admin') {
+      alert('Bạn không có quyền truy cập trang này!');
+      window.location.href = 'index.html';
+    }
+    </script>
+  <style>
+    body {
+      background: #f5f5f5;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .content-box {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+  .container {
+    max-width: 100% !important;
+    width: 100%;
+    padding: 0 20px;
+  }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-success px-4">
+    <a class="navbar-brand" href="index.html">Trang chủ</a>
+    <ul class="navbar-nav ms-auto d-flex flex-row gap-3">
+      <li class="nav-item"><a class="nav-link text-white" href="nhahang.html">Quản lý nhà hàng</a></li>
+      <li class="nav-item"><a class="nav-link text-white" href="#" onclick="logout()">Đăng xuất</a></li>
+    </ul>
+  </nav>
+
+  <div class="container mt-4 d-flex justify-content-center">
+    <div class="content-box w-100">
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="text-success">Danh sách nhà hàng</h3>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()">Thêm nhà hàng</button>
+      </div>
+      <table class="table table-bordered">
+        <thead class="table-light">
+          <tr>
+            <th>Tên</th>
+            <th>Địa chỉ</th>
+            <th>Mô tả</th>
+            <th>Khu vực</th>
+            <th>SĐT</th>
+            <th>Mô hình</th>
+            <th>Sức chứa min</th>
+            <th>Sức chứa max</th>
+            <th>Diện tích min</th>
+            <th>Diện tích max</th>
+            <th>Giá min</th>
+            <th>Giá max</th>
+            <th>Kinh độ</th>
+            <th>Vĩ độ</th>
+            <th>Thời gian</th>
+            <th>Đánh giá</th>
+            <th>Phí gửi xe</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+        <tbody id="nhahangTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="modal fade" id="nhahangModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <form class="modal-content" id="nhahangForm">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title" id="modalTitle">Thêm nhà hàng</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="id" />
+          <input class="form-control mb-2" placeholder="Tên" id="ten" required />
+          <input class="form-control mb-2" placeholder="Địa chỉ" id="dia_chi" required />
+          <input class="form-control mb-2" placeholder="Mô tả" id="mo_ta" />
+          <input class="form-control mb-2" placeholder="Khu vực" id="khu_vuc" />
+          <input class="form-control mb-2" placeholder="Số điện thoại" id="so_dien_th" />
+          <input class="form-control mb-2" placeholder="Mô hình" id="mo_hinh" />
+          <input class="form-control mb-2" placeholder="Sức chứa tối thiểu" id="suc_chua_min" type="number" />
+          <input class="form-control mb-2" placeholder="Sức chứa tối đa" id="suc_chua_max" type="number" />
+          <input class="form-control mb-2" placeholder="Giá thấp nhất" id="gia_min" type="number" />
+          <input class="form-control mb-2" placeholder="Giá cao nhất" id="gia_max" type="number" />
+          <input class="form-control mb-2" placeholder="Diên tích tối thiểu" id="dien_tich_min" type="number" />
+          <input class="form-control mb-2" placeholder="Diện tích tối đa" id="dien_tich_max" type="number" />
+          <input class="form-control mb-2" placeholder="Kinh độ" id="kinh_do" type="number" step="any" />
+          <input class="form-control mb-2" placeholder="Vĩ độ" id="vi_do" type="number" step="any" />
+          <input class="form-control mb-2" placeholder="Thời gian" id="thoi_gian" />
+          <input class="form-control mb-2" placeholder="Đánh giá (0-5)" id="danh_gia" type="number" step="0.1" />
+          <input class="form-control mb-2" placeholder="Phí gửi xe" id="gui_xe" />
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Lưu</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Huỷ</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    let nhahangs = [];
+    let editing = false;
+
+    const modal = new bootstrap.Modal(document.getElementById('nhahangModal'));
+    const form = document.getElementById('nhahangForm');
+
+    function renderRestaurants() {
+      const body = document.getElementById('nhahangTableBody');
+      body.innerHTML = '';
+      nhahangs.forEach(r => {
+        body.innerHTML += `
+          <tr>
+            <td>${r.ten}</td>
+            <td>${r.dia_chi}</td>
+            <td>${r.mo_ta}</td>
+            <td>${r.khu_vuc}</td>
+            <td>${r.so_dien_th}</td>
+            <td>${r.mo_hinh}</td>
+            <td>${r.suc_chua_min}</td>
+            <td>${r.suc_chua_max}</td>
+            <td>${r.dien_tich_min}</td>
+            <td>${r.dien_tich_max}</td>
+            <td>${r.gia_min}</td>
+            <td>${r.gia_max}</td>
+            <td>${r.kinh_do}</td>
+            <td>${r.vi_do}</td>
+            <td>${r.thoi_gian}</td>
+            <td>${r.danh_gia}</td>
+            <td>${r.gui_xe}</td>
+            <td>
+              <button class="btn btn-warning btn-sm" onclick='openEditModal(${JSON.stringify(r)})'>Sửa</button>
+              <button class="btn btn-danger btn-sm" onclick="deleteRestaurant(${r.id})">Xoá</button>
+            </td>
+          </tr>`;
+      });
+    }
+
+    function openAddModal() {
+      editing = false;
+      document.getElementById('modalTitle').innerText = 'Thêm nhà hàng';
+      form.reset();
+      document.getElementById('id').value = '';
+      modal.show();
+    }
+
+    function openEditModal(r) {
+  editing = true;
+  document.getElementById('modalTitle').innerText = 'Sửa nhà hàng';
+
+  // ⚠️ Sửa đúng từng trường cụ thể
+  document.getElementById('id').value = r.id || '';
+  document.getElementById('ten').value = r.ten || '';
+  document.getElementById('dia_chi').value = r.dia_chi || '';
+  document.getElementById('mo_ta').value = r.mo_ta || '';
+  document.getElementById('khu_vuc').value = r.khu_vuc || '';
+  document.getElementById('so_dien_th').value = r.so_dien_th || '';
+  document.getElementById('mo_hinh').value = r.mo_hinh || '';
+  document.getElementById('suc_chua_min').value = r.suc_chua_min || '';
+  document.getElementById('suc_chua_max').value = r.suc_chua_max || '';
+  document.getElementById('dien_tich_min').value = r.dien_tich_min || '';
+  document.getElementById('dien_tich_max').value = r.dien_tich_max || '';
+  document.getElementById('gia_min').value = r.gia_min || '';
+  document.getElementById('gia_max').value = r.gia_max || '';
+  document.getElementById('kinh_do').value = r.kinh_do || '';
+  document.getElementById('vi_do').value = r.vi_do || '';
+  document.getElementById('thoi_gian').value = r.thoi_gian || '';
+  document.getElementById('danh_gia').value = r.danh_gia || '';
+  document.getElementById('gui_xe').value = r.gui_xe || '';
+  modal.show();
+}
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      const id = document.getElementById('id').value.trim();
+      const data = {
+        ten: ten.value,
+        dia_chi: dia_chi.value,
+        mo_ta: mo_ta.value,
+        khu_vuc: khu_vuc.value,
+        so_dien_th: so_dien_th.value,
+        mo_hinh: mo_hinh.value,
+        suc_chua_min: parseInt(suc_chua_min.value),
+        suc_chua_max: parseInt(suc_chua_max.value),
+        dien_tich_min: parseInt(dien_tich_min.value),
+        dien_tich_max: parseInt(dien_tich_max.value),
+        gia_min: parseInt(gia_min.value),
+        gia_max: parseInt(gia_max.value),
+        kinh_do: parseFloat(kinh_do.value.replace(',', '.')),
+        vi_do: parseFloat(vi_do.value.replace(',', '.')),
+        thoi_gian: thoi_gian.value,
+        danh_gia: parseFloat(danh_gia.value.replace(',', '.')),
+        gui_xe: gui_xe.value
+      };
+      
+      const url = id ? `http://localhost:3000/api/nhahang/${id}` : 'http://localhost:3000/api/nhahang';
+      const method = id ? 'PUT' : 'POST';
+
+      fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      })
+      .then(async res => {
+          if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err);
+          }
+          return fetch('http://localhost:3000/api/nhahang');
+      }).then(res => res.json())
+        .then(data => {
+          nhahangs = data;
+          renderRestaurants();
+          modal.hide();
+        }).catch(err => alert(err.message));
+    });
+
+    function deleteRestaurant(id, ten) {
+  if (!id) return alert("ID không hợp lệ!");
+
+  const xacNhan = confirm(`Bạn có muốn xoá nhà hàng không?`);
+  if (!xacNhan) return;
+
+  fetch(`http://localhost:3000/api/nhahang/${id}`, {
+    method: 'DELETE'
+  })
+    .then(res => {
+      if (!res.ok) throw new Error("Xoá thất bại");
+      return res.json();
+    })
+    .then(() => {
+      nhahangs = nhahangs.filter(r => r.id !== id);
+      location.reload(); 
+    })
+    .catch(err => console.error(err.message)); 
+}
+
+
+    window.onload = function () {
+      fetch('http://localhost:3000/api/nhahang')
+        .then(res => res.json())
+        .then(data => {
+          nhahangs = data;
+          renderRestaurants();
+        }).catch(err => console.error('Lỗi tải nhà hàng:', err));
+    };
+  </script>
+</body>
+</html>

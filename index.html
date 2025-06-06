@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" href="https://openlayers.org/favicon.ico" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.0/css/all.min.css" />
+    <link rel="stylesheet" href="style_fixed.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BẢN ĐỒ NHÀ HÀNG</title>
+  </head>
+  <body>
+    <div id="popup" class="ol-popup">
+      <a href="#" id="popup-closer" class="ol-popup-closer"><i class="fa-solid fa-xmark"></i></a>
+      <div id="popup-content"></div>
+    </div>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success px-4">
+      <a class="navbar-brand" href="#">Trang chủ</a>
+      <ul class="navbar-nav ms-auto d-flex flex-row gap-3">
+        <li class="nav-item"><a class="nav-link text-white" href="users.html">Quản lý người dùng</a></li>
+        <li class="nav-item"><a class="nav-link text-white" href="nhahang.html">Quản lý nhà hàng</a></li>
+        <li class="nav-item"><a class="nav-link text-white bg-danger px-3 rounded" href="#" id="logout-btn">Đăng xuất</a></li>
+      </ul>
+    </nav>
+
+    <div class="container">
+      <div class="topbar">
+        <div class="logo">
+          <h2>HÀ NỘI - NHÀ HÀNG</h2>
+        </div>
+
+        <div class="search-filter">
+          <div class="search">
+            <input type="text" id="searchInput" name="search" placeholder="Tìm kiếm...">
+            <label for="search"><i class="fas fa-search"></i></label>
+          </div>
+
+          <select id="filter-time">
+            <option value="">Giờ mở cửa</option>
+            <option value="morning">Buổi sáng (8h - 12h)</option>
+            <option value="afternoon">Buổi trưa (12h - 17h)</option>
+            <option value="evening">Buổi chiều tối (17h - 23h)</option>
+            <option value="late">Đêm khuya (sau 23h)</option>
+          </select>
+
+          <select id="filter-area">
+            <option value="">Diện tích</option>
+            <option value="1">50 - 200</option>
+            <option value="2">201 - 400</option>
+            <option value="3">401 - 600</option>
+            <option value="4">601 - 800</option>
+            <option value="5">> 801 m²</option>
+          </select>
+
+          <select id="filter-price">
+            <option value="">Mức giá </option>
+            <option value="1">50k - 200k</option>
+            <option value="2">201k - 400k</option>
+            <option value="3">401k - 600k</option>
+            <option value="4">> 600k</option>
+          </select>
+
+          <select id="filter-rating">
+            <option value="">Đánh giá</option>
+            <option value="1">1 ⭐</option>
+            <option value="2">2 ⭐</option>
+            <option value="3">3 ⭐</option>
+            <option value="4">4 ⭐</option>
+            <option value="5">5 ⭐</option>
+          </select>
+
+          <button id="apply-filter">Lọc</button>
+        </div>
+
+        <div class="location-button">
+          <button id="my-location-btn">Vị trí của tôi</button>
+          <button id="nearest-btn">Nhà hàng gần nhất</button>
+        </div>
+
+        <div class="user">
+          <img src="logo_hanoi.png" alt="">
+        </div>
+      </div>
+
+      <div class="main">
+        <div id="map" class="map"></div>
+        <div id="suggest-box"><ul id="suggestions" class="suggestion-box"></ul></div>
+        <button id="suggest-btn" class="map-button">Gợi ý</button>
+      </div>
+    </div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>
