@@ -421,7 +421,7 @@ document.getElementById('apply-filter').addEventListener('click', () => {
 
   let filtered = allFeatures;
 
-  // Lọc sức chứa
+  // Lọc giờ mở cửa
   if (timeRange !== '') {
     const timeMap = {
       morning: [6, 11],
@@ -488,12 +488,22 @@ document.getElementById('apply-filter').addEventListener('click', () => {
   }
 
   // Lọc đánh giá
-  if (rating !== '') {
-    const r = parseInt(rating);
-    filtered = filtered.filter(f => {
-     return Math.round(parseFloat(f.get('danh_gia'))) === r;
-    });
-  }
+  // Lọc đánh giá
+if (rating !== '') {
+  const ranges = {
+    '1': [1.0, 1.9],
+    '2': [2.0, 2.9],
+    '3': [3.0, 3.9],
+    '4': [4.0, 4.9],
+    '5': [5.0, 5.0]
+  };
+  const [minR, maxR] = ranges[rating];
+  filtered = filtered.filter(f => {
+    const r = parseFloat(f.get('danh_gia') || 0);
+    return r >= minR && r <= maxR;
+  });
+}
+
 
   // Cập nhật bản đồ và zoom
   vectorSource.clear();

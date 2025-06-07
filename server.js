@@ -38,7 +38,7 @@ app.post('/api/login', async (req, res) => {
   const adminUsers = ['admin', 'nguyendinhvan', 'van2003']; // Thêm các tài khoản được xem là quản trị
   const role = adminUsers.includes(user.username) ? 'admin' : 'user';
   res.json({ success: true, role, username: user.username });
-  // chi admin quan trires.json({ success: true, role: user.username === 'admin' ? 'admin' : 'user', username: user.username });
+  // chi admin quan tri res.json({ success: true, role: user.username === 'admin' ? 'admin' : 'user', username: user.username });
 });
 
 // lấy ds người dùng
