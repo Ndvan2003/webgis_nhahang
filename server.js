@@ -61,6 +61,26 @@ app.delete('/api/users/:username', async (req, res) => {
     res.status(500).json({ error: 'Không thể xoá người dùng' });
   }
 });
+//sửa người dùng
+app.put('/api/users/:username', async (req, res) => {
+  const { username } = req.params;
+  const { email, role } = req.body;
+
+  try {
+    const result = await pool.query(
+      'UPDATE users SET email = $1, role = $2 WHERE username = $3',
+      [email, role, username]
+    );
+
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: 'Không tìm thấy người dùng' });
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Lỗi cập nhật người dùng:', err);
+    res.status(500).json({ error: 'Lỗi server khi cập nhật' });
+  }
+});
 // lấy dữ liệu nhà hàng 
 app.get('/api/nhahang', async (req, res) => {
   try {
