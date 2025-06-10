@@ -673,5 +673,12 @@ const parkLayer = new VectorLayer({
 });
 
 map.addLayer(parkLayer);
+//ẩn nút khi là user
+if (localStorage.getItem('role') === 'user') {
+  const userBtn = document.querySelector('a[href="users.html"]');
+  const restBtn = document.querySelector('a[href="nhahang.html"]');
+  if (userBtn) userBtn.style.display = 'none';
+  if (restBtn) restBtn.style.display = 'none';
+}
 
 
