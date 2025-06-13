@@ -11,6 +11,7 @@ import XYZ from 'ol/source/XYZ';
 import Point from 'ol/geom/Point';
 import Geolocation from 'ol/Geolocation';
 import { Circle as CircleStyle, Fill, Stroke, Style, Icon, Text } from 'ol/style';
+import { Circle as CircleGeom } from 'ol/geom';
 import { defaults as defaultControls } from 'ol/control';
 import { Overlay } from 'ol';
 import GeoJSON from 'ol/format/GeoJSON';
@@ -19,6 +20,7 @@ import { WFS, GML } from 'ol/format';
 
 
 // khai báo biến 
+let radiusLayer = null;
 let routeLayer = null;
 let userLocation = null;
 let markerLayers = [];
@@ -58,10 +60,12 @@ document.getElementById('my-location-btn').addEventListener('click', () => {
         const lon = position.coords.longitude;
         const lat = position.coords.latitude;
         userLocation = [lon, lat]; // Lưu lại vị trí
+
         const locationFeature = new Feature({
           geometry: new Point(fromLonLat([lon, lat])),
           name: 'Vị trí của tôi',
         });
+
         locationFeature.setStyle(
           new Style({
             image: new Icon({
@@ -88,26 +92,37 @@ document.getElementById('my-location-btn').addEventListener('click', () => {
         map.addLayer(locationLayer);
         markerLayers.push(locationLayer);
 
+        // 👉 Hiển thị vòng tròn 1km
+        if (radiusLayer) map.removeLayer(radiusLayer);
+        const circle = new CircleGeom(fromLonLat([lon, lat]), 1000); // 1000m
+        const circleFeature = new Feature(circle);
+
+        radiusLayer = new VectorLayer({
+          source: new VectorSource({ features: [circleFeature] }),
+          style: new Style({
+            stroke: new Stroke({ color: '#1d4ed8', width: 2 }),
+            fill: new Fill({ color: 'rgba(30, 64, 175, 0.1)' }),
+          }),
+        });
+
+        map.addLayer(radiusLayer);
+
         map.getView().animate({
           center: fromLonLat([lon, lat]),
-          zoom: 17,
+          zoom: 16,
           duration: 1000,
         });
       },
       (error) => {
         console.error('Error getting location: ', error);
-        alert('Không thể lấy vị trí hiện tại. Vui lòng kiểm tra cài đặt!');
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
+        alert('Không thể lấy vị trí hiện tại!');
       }
     );
   } else {
-    alert('Trình duyệt không hỗ trợ Geolocation.');
+    alert('Trình duyệt không hỗ trợ định vị!');
   }
 });
+
 // Thêm lớp vector từ WFS (GeoServer)
 const vectorSource = new VectorSource({
   format: new GeoJSON(),
@@ -306,111 +321,6 @@ document.getElementById('searchInput').addEventListener('input', (e) => {
     vectorSource.addFeatures(allFeatures);
   }
 });
-// hiển thị tất cả tên quán ở phần gợi ý
-const searchInput = document.getElementById('searchInput');
-const suggestionBox = document.getElementById('suggest-box');
-const suggestionList = document.getElementById('suggestions');
-
-searchInput.addEventListener('input', function () {
-  const input = this.value.trim().toLowerCase();
-  suggestionList.innerHTML = '';
-
-  if (input.length < 1) {
-    suggestionBox.style.display = 'none';
-    vectorSource.clear();
-    vectorSource.addFeatures(allFeatures);
-    return;
-  }
-
-  const matchedStores = allFeatures.filter((feature) =>
-    (feature.get('ten') || '').toLowerCase().startsWith(input)
-  );
-
-  if (matchedStores.length > 0) {
-    suggestionBox.style.display = 'block';
-  } else {
-    suggestionBox.style.display = 'none';
-  }
-
-  vectorSource.clear();
-  vectorSource.addFeatures(matchedStores);
-
-  matchedStores.slice(0, 10).forEach((feature) => {
-    const ten = feature.get('ten');
-    const li = document.createElement('li');
-    li.innerHTML = `<i class="fa-solid fa-utensils"></i> ${ten}`;
-    li.addEventListener('click', () => {
-      searchInput.value = ten;
-      suggestionBox.style.display = 'none';
-      suggestionList.innerHTML = '';
-      vectorSource.clear();
-      vectorSource.addFeature(feature);
-
-      const coords = feature.getGeometry().getCoordinates();
-      map.getView().animate({ center: coords, zoom: 17, duration: 1000 });
-
-      const popupContent = document.getElementById('popup-content');
-      const popupOverlay = map.getOverlays().item(0);
-      popupContent.innerHTML = `<strong>${ten}</strong>`;
-      popupOverlay.setPosition(coords);
-    });
-    suggestionList.appendChild(li);
-  });
-
-  if (matchedStores.length > 0) {
-    const coords = matchedStores[0].getGeometry().getCoordinates();
-    map.getView().animate({ center: coords, zoom: 16, duration: 1000 });
-  }
-});
-// hiển thị nhà hàng khi ấn nút gợi ý 
-document.getElementById('suggest-btn').addEventListener('click', () => {
-  clearAllMapState();
-  suggestionList.innerHTML = '';
-  searchInput.value = ''; // Xóa ô tìm kiếm
-
-  if (allFeatures.length === 0) {
-    suggestionBox.style.display = 'none';
-    return;
-  }
-
-  suggestionBox.style.display = 'block';
-  vectorSource.clear();
-  vectorSource.addFeatures(allFeatures);
-
-  allFeatures.slice(0, 30).forEach((feature) => {
-    const ten = feature.get('ten');
-    const li = document.createElement('li');
-    li.innerHTML = `<i class="fa-solid fa-utensils"></i> ${ten}`;
-    li.addEventListener('click', () => {
-      clearAllMapState(); 
-      searchInput.value = ten;
-      suggestionBox.style.display = 'none';
-      suggestionList.innerHTML = '';
-      vectorSource.clear();
-      vectorSource.addFeature(feature);
-
-      const coords = feature.getGeometry().getCoordinates();
-      map.getView().animate({ center: coords, zoom: 17, duration: 1000 });
-
-      const popupContent = document.getElementById('popup-content');
-      const popupOverlay = map.getOverlays().item(0);
-      popupContent.innerHTML = `<strong>${ten}</strong>`;
-      popupOverlay.setPosition(coords);
-    });
-    suggestionList.appendChild(li);
-  });
-  document.addEventListener('click', function (e) {
-  const suggestBox = document.getElementById('suggest-box');
-  const suggestBtn = document.getElementById('suggest-btn');
-
-  // tắt phần gợi ý khi bấm vào
-
-    if (!suggestBox.contains(e.target) && !suggestBtn.contains(e.target)) {
-      suggestBox.style.display = 'none';
-    }
-  });
-});
-
 // nút lọc 
 document.getElementById('apply-filter').addEventListener('click', () => {
   clearAllMapState();
@@ -418,6 +328,7 @@ document.getElementById('apply-filter').addEventListener('click', () => {
   const area = document.getElementById('filter-area').value;
   const price = document.getElementById('filter-price').value;
   const rating = document.getElementById('filter-rating').value;
+  const radius = parseFloat(document.getElementById('filter-radius').value);
 
   let filtered = allFeatures;
 
@@ -488,14 +399,13 @@ document.getElementById('apply-filter').addEventListener('click', () => {
   }
 
   // Lọc đánh giá
-  // Lọc đánh giá
 if (rating !== '') {
   const ranges = {
     '1': [1.0, 1.9],
     '2': [2.0, 2.9],
     '3': [3.0, 3.9],
     '4': [4.0, 4.9],
-    '5': [5.0, 5.0]
+    '5': [5.0, 5.0]  
   };
   const [minR, maxR] = ranges[rating];
   filtered = filtered.filter(f => {
@@ -504,22 +414,58 @@ if (rating !== '') {
   });
 }
 
+//Lọc theo bán kính 
+if (!isNaN(radius)) {
+  if (!userLocation) {
+    alert('Vui lòng bật "Vị trí của tôi" trước khi lọc theo bán kính!');
+    return;
+  }
+  
+  const [lon1, lat1] = userLocation;
+  filtered = filtered.filter(f => {
+    const lon2 = f.get('kinh_do'); 
+    const lat2 = f.get('vi_do');
+    if (!lon2 || !lat2) return false;
 
-  // Cập nhật bản đồ và zoom
-  vectorSource.clear();
-  vectorSource.addFeatures(filtered);
+    // Tính khoảng cách giữa vị trí người dùng và nhà hàng
+    const d = calculateDistance(lat1, lon1, lat2, lon2);
+    
+    // Chỉ giữ lại nhà hàng trong phạm vi bán kính
+    return d <= radius;
+  });
 
-  if (filtered.length > 0) {
+  // Vẽ lại vòng tròn bán kính
+  if (radiusLayer) map.removeLayer(radiusLayer);
+  const circle = new CircleGeom(fromLonLat([lon1, lat1]), radius * 1000); // Vẽ vòng tròn bán kính
+  const circleFeature = new Feature(circle);
+
+  radiusLayer = new VectorLayer({
+    source: new VectorSource({ features: [circleFeature] }),
+    style: new Style({
+      stroke: new Stroke({ color: '#1d4ed8', width: 2 }),
+      fill: new Fill({ color: 'rgba(30, 64, 175, 0.1)' }),
+    }),
+  });
+
+  map.addLayer(radiusLayer);
+
+// Cập nhật lại bản đồ để chỉ hiển thị những nhà hàng lọc được
+vectorSource.clear();
+vectorSource.addFeatures(filtered);
+
+// Nếu có kết quả, zoom vào vị trí đầu tiên trong danh sách đã lọc
+if (filtered.length > 0) {
     const coord = filtered[0].getGeometry().getCoordinates();
     map.getView().animate({ center: coord, zoom: 16, duration: 1000 });
-  } else {
-    alert('Không tìm thấy nhà hàng phù hợp!');
-  }
-  // 👉 Reset tất cả select lọc sau khi tìm kiếm
-  document.getElementById('filter-time').value = '';
-  document.getElementById('filter-area').value = '';
-  document.getElementById('filter-price').value = '';
-  document.getElementById('filter-rating').value = '';
+ } 
+}
+// 👉 Reset tất cả select lọc sau khi tìm kiếm
+document.getElementById('filter-time').value = '';
+document.getElementById('filter-area').value = '';
+document.getElementById('filter-price').value = '';
+document.getElementById('filter-rating').value = '';
+document.getElementById('filter-radius').value = '';
+
 });
 // nút nhà hàng gần nhất 
 function toRadians(degrees) {
@@ -527,7 +473,7 @@ function toRadians(degrees) {
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371;
+  const R = 6371; // Bán kính trái đất (đơn vị km)
   const dLat = toRadians(lat2 - lat1);
   const dLon = toRadians(lon2 - lon1);
   const a =
@@ -536,10 +482,15 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     Math.cos(toRadians(lat2)) *
     Math.sin(dLon / 2) ** 2;
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
+  return R * c; // Khoảng cách tính bằng km
 }
 
+
 function clearAllMapState() {
+  if (radiusLayer) {
+  map.removeLayer(radiusLayer);
+  radiusLayer = null;
+}
   // Xóa đường đi nếu có
   if (routeLayer) {
     map.removeLayer(routeLayer);
@@ -564,9 +515,7 @@ function clearAllMapState() {
   }
 }
 
-
-
-
+// tìm nút nhà hàng gần nhất
 document.getElementById('nearest-btn').addEventListener('click', () => {
   clearAllMapState();
   if (!userLocation) return alert('Hãy bấm "Vị trí của tôi" trước!');

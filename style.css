@@ -9,6 +9,7 @@
   right: 0;
 }
 
+
 * {
   padding: 0; 
   margin: 0;
@@ -234,46 +235,6 @@ body {
   background-color: #fff;
   transform: translateY(-1px); /* hiệu ứng nổi nhẹ khi hover */
   box-shadow: 0 12px 28px rgba(0,0,0,0.15);
-}
-/*tên quán ở phần gợi ý*/
-#suggest-box {
-  position: fixed;
-  top: 120px;
-  right: 10px;
-  width: 260px;
-  background: rgba(255, 255, 255, 0.96);
-  border-radius: 12px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.15);
-  padding: 12px;
-  z-index: 1500;
-  display: none; /* ẩn mặc định, sẽ hiển thị bằng JS */
-  backdrop-filter: blur(6px);
-}
-
-#suggest-box ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-#suggest-box li {
-  padding: 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-#suggest-box li:hover {
-  background: #f0f0f0;
-}
-
-#suggest-box i {
-  color: #4a5568;
 }
 /*  (select + button) lại cho gọn */
 .filter-group {
