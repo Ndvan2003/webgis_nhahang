@@ -114,9 +114,26 @@
       }).then(res => {
         if (!res.ok) throw new Error('Lỗi cập nhật');
         alert('Cập nhật thành công!');
-        if (username === localStorage.getItem('username') && updatedUser.role === 'user') {
-          localStorage.setItem('role', 'user');
+        ///
+        if (username === localStorage.getItem('username')) {
+          localStorage.setItem('role', updatedUser.role);
+          // Cập nhật lại quyền hiển thị các nút (realtime)
+          const newRole = updatedUser.role;
+          const userBtn = document.querySelector('a[href="users.html"]');
+          const restBtn = document.querySelector('a[href="nhahang.html"]');
+
+          if (newRole === 'admin') {
+            if (userBtn) userBtn.style.display = 'inline-block';
+            if (restBtn) restBtn.style.display = 'inline-block';
+            alert('Bạn đã được cấp quyền admin!');
+          } else {
+            if (userBtn) userBtn.style.display = 'none';
+            if (restBtn) restBtn.style.display = 'none';
+            alert('Bạn đã bị chuyển về quyền user. Hệ thống sẽ đưa bạn về trang chính.');
+            window.location.href = 'index.html';
+          }
         }
+
         location.reload();
       }).catch(err => alert(err.message));
     });

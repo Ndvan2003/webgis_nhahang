@@ -247,6 +247,25 @@
     .catch(err => console.error(err.message)); 
 }
 
+    // Nếu có tọa độ mới, mở modal thêm nhà hàng và điền sẵn
+    if (window.location.hash === '#add') {
+      setTimeout(() => {
+        const lon = localStorage.getItem('pending_lon');
+        const lat = localStorage.getItem('pending_lat');
+
+        openAddModal();
+
+        if (lon && lat) {
+          document.getElementById('kinh_do').value = lon;
+          document.getElementById('vi_do').value = lat;
+
+          // Xoá khỏi localStorage để tránh bị lặp lại
+          localStorage.removeItem('pending_lon');
+          localStorage.removeItem('pending_lat');
+          location.hash = ''; // Xoá hash URL
+        }
+      }, 500);
+    }
 
     window.onload = function () {
       fetch('http://localhost:3000/api/nhahang')

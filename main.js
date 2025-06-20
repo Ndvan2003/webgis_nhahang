@@ -16,6 +16,8 @@ import { Overlay } from 'ol';
 import GeoJSON from 'ol/format/GeoJSON';
 import LineString from 'ol/geom/LineString';
 import XYZ from 'ol/source/XYZ';
+import MousePosition from 'ol/control/MousePosition';
+import { createStringXY } from 'ol/coordinate';
 
 
 // khai báo biến 
@@ -37,6 +39,16 @@ const map = new Map({
   }),
   controls: defaultControls({ zoom: false }),
 });
+// Thêm hiển thị toạ độ trên OSM
+const mousePositionControl = new MousePosition({
+  coordinateFormat: createStringXY(6),
+  projection: 'EPSG:4326',
+  className: '',
+  target: document.getElementById('mouse-position'),
+  undefinedHTML: '&nbsp;'
+});
+map.addControl(mousePositionControl);
+
 //bản dồ vệ tinh
 const satelliteLayer = new TileLayer({
   source: new XYZ({
@@ -46,37 +58,88 @@ const satelliteLayer = new TileLayer({
   visible: false
 });
 map.addLayer(satelliteLayer);
-// Nút gạt switch bật/tắt
+// Nút gạt switch vệ tinh
 document.getElementById('toggleSatellite').addEventListener('change', function () {
   satelliteLayer.setVisible(this.checked);
 });
+// gán cho nút switch nhà hàng
+document.getElementById('toggleRestaurant').addEventListener('change', function () {
+  const isChecked = this.checked;
+  vectorLayer.setVisible(isChecked);
+  if (isChecked) {
+    // Khi bật lớp nhà hàng => tắt label
+    showLabel = false;
+    document.getElementById('toggleLabel').checked = false;
+    vectorLayer.setStyle(iconWithLabelStyle);
+  }
+});
+// gán cho nút switch phường
+document.getElementById('togglePhuong').addEventListener('change', function () {
+  phuongBacTuLiemLayer.setVisible(this.checked);
+});
+// gán cho nút bật tắt lable
+document.getElementById('toggleLabel').addEventListener('change', function () {
+  showLabel = this.checked;
+  vectorLayer.setStyle(iconWithLabelStyle); // cập nhật lại style
+});
+//WFS dữ liệu phường
+const phuongBacTuLiemLayer = new VectorLayer({
+  source: new VectorSource({
+    url: '/geoserver/QLNH/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=QLNH:Diaphan_Bactuliem&outputFormat=application/json&maxFeatures=50',
+    format: new GeoJSON()
+  }),
+  visible: false, 
+  style: function (feature) {
+    return new Style({
+      stroke: new Stroke({
+        color: 'rgb(168, 32, 32)',  
+        width: 2
+      }),
+      fill: new Fill({
+        color: 'rgba(0,0,0,0)' 
+      }),
+      text: new Text({
+        text: feature.get('phuong') || '',  
+        font: 'bold 12px Arial',
+        fill: new Fill({ color: '#000' }),
+        stroke: new Stroke({ color: '#fff', width: 2 })
+      })
+    });
+  }
+});
+
+map.addLayer(phuongBacTuLiemLayer);
 // WFS dữ liệu nhà hàng
 const vectorSource = new VectorSource({
   format: new GeoJSON(),
   url: '/geoserver/QLNH/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=QLNH:nhahang&outputFormat=application/json'
 });
 
+let showLabel = true; // biến toàn cục
+
 const iconWithLabelStyle = function (feature) {
   return new Style({
     image: new Icon({
-      src: 'anh.png',
+      src: 'nhahang.png',
       crossOrigin: 'anonymous',
-      scale: 0.1,
+      scale: 0.08,
       anchor: [0.5, 1]
     }),
-    text: new Text({
+    text: showLabel ? new Text({
       text: feature.get('ten') || '',
       offsetY: -35,
       font: 'bold 13px Arial',
       fill: new Fill({ color: '#000' }),
       stroke: new Stroke({ color: '#fff', width: 3 }),
-    })
+    }) : null
   });
 };
 
+
 const vectorLayer = new VectorLayer({
   source: vectorSource,
-  style: iconWithLabelStyle
+  style: iconWithLabelStyle,
+  visible: false
 });
 vectorLayer.setZIndex(10);
 map.addLayer(vectorLayer);
@@ -98,7 +161,7 @@ document.getElementById('my-location-btn').addEventListener('click', () => {
           new Style({
             image: new Icon({
               src: 'vitri.png',
-              scale: 0.1,
+              scale: 0.05,
             }),
           })
         );
@@ -199,12 +262,12 @@ map.on('singleclick', function (evt) {
     popupOverlay.setPosition(undefined);
   }
 });
-
 popupCloser.onclick = function () {
   popupOverlay.setPosition(undefined);
   popupCloser.blur();
   return false;
 };
+
 
 // Tìm kiếm nhà hàng
 let allFeatures = [];
@@ -760,6 +823,27 @@ document.getElementById('nearest-btn').addEventListener('click', () => {
     })
     .catch(() => alert('Không thể lấy dữ liệu đường đi!'));
 });
+// Click vào bản đồ để tạo mới nhà hàng
+map.on('dblclick', function (evt) {
+  const feature = map.forEachFeatureAtPixel(evt.pixel, function (feat) {
+    return feat;
+  });
+
+  // Nếu không nhấn vào marker nhà hàng
+  if (!feature) {
+    const lonLat = ol.proj.toLonLat(evt.coordinate);
+    const lon = lonLat[0].toFixed(6);
+    const lat = lonLat[1].toFixed(6);
+
+    // Lưu vào localStorage
+    localStorage.setItem('pending_lon', lon);
+    localStorage.setItem('pending_lat', lat);
+
+    // Chuyển sang trang thêm nhà hàng
+    window.location.href = 'nhahang.html#add';
+  }
+});
+
 // Ẩn bản đồ nếu chưa đăng nhập
 if (!localStorage.getItem('role')) {
   window.location.href = 'login.html';
@@ -770,32 +854,6 @@ document.getElementById('logout-btn')?.addEventListener('click', () => {
   localStorage.removeItem('role');
   window.location.href = 'login.html';
 });
-// quản lý nhà hàng
-const parkSource = new VectorSource({
-  format: new GeoJSON(),
-  url: '/geoserver/QLNH/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=QLNH%3Acongvien&outputFormat=application%2Fjson'
-});
-
-const parkStyle = new Style({
-  image: new Icon({
-    src: 'anh.png',
-    scale: 0.1,
-    anchor: [0.5, 1]
-  }),
-  text: new Text({
-    text: 'Nhà hàng',
-    offsetY: -25,
-    fill: new Fill({ color: '#006400' }),
-    stroke: new Stroke({ color: '#fff', width: 2 }),
-  })
-});
-
-const parkLayer = new VectorLayer({
-  source: parkSource,
-  style: parkStyle
-});
-
-map.addLayer(parkLayer);
 //ẩn nút khi là user
 if (localStorage.getItem('role') === 'user') {
   const userBtn = document.querySelector('a[href="users.html"]');
@@ -803,6 +861,7 @@ if (localStorage.getItem('role') === 'user') {
   if (userBtn) userBtn.style.display = 'none';
   if (restBtn) restBtn.style.display = 'none';
 }
+
 
 
 

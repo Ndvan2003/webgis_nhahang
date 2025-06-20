@@ -7,6 +7,8 @@
     <link rel="stylesheet" href="style.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>BẢN ĐỒ NHÀ HÀNG</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
+    <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   </head>
   <body>
@@ -117,12 +119,11 @@
         if (restLink) restLink.style.display = 'none';
       }
     </script>
-    <script type="module" src="main.js"></script>
     <div id="list-container" style="display: none; position: fixed; top: 150px; right: 10px; width: 280px; max-height: 400px; overflow-y: auto; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); padding: 12px; z-index: 1500;">
       <h5>📋 Danh sách quán </h5>
       <ul id="list-results" style="list-style: none; padding-left: 0;"></ul>
     </div>
-    <div id="direction-box" style="position: absolute; top: 150px; left: 10px; width: 380px; max-height: 65vh; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 10px; z-index: 9999; display: none;">
+    <div id="direction-box" style="position: absolute; top: 150px; left: 10px; width: 380px; max-height: 55vh; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 10px; z-index: 9999; display: none;">
       <h6 style="font-size: 20px; font-weight: bold; color: #1e40af;">
         📍 Hướng dẫn đường đi</h6>
       <ul id="direction-list" style="padding-left: 18px; line-height: 1.6;"></ul>
@@ -131,12 +132,42 @@
         🧭 Thoát chỉ đường
       </button>
     </div>
-    <div style="position: absolute; bottom: 20px; left: 15px; z-index: 1000; background: rgb(119, 100, 100); padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+    <!-- ✅ Nút Vệ tinh -->
+    <div style="position: absolute; bottom: 20px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 5px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
       <span style="color: rgb(17, 10, 10); margin-left: 8px;">🗺️ Vệ tinh</span>
       <label class="switch">
         <input type="checkbox" id="toggleSatellite">
         <span class="slider round"></span>
       </label>
     </div>
+    <!-- ✅ Nút Nhà hàng -->
+    <div style="position: absolute; bottom: 70px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+      <span style="color: rgb(17, 10, 10); margin-left: 8px;">🍽️ Nhà hàng</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleRestaurant">
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <!-- ✅ Nút Phường -->
+    <div style="position: absolute; bottom: 120px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+      <span style="color: rgb(17, 10, 10); margin-left: 8px;">🧭 Phường</span>
+      <label class="switch">
+        <input type="checkbox" id="togglePhuong">
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <!-- ✅ Nút Tên quán  -->
+    <div style="position: absolute; bottom: 170px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
+      <span style="color: rgb(17, 10, 10); margin-left: 8px;">🏷️ Tên quán</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleLabel" >
+        <span class="slider round"></span>
+      </label>
+    </div>
+    <!-- ✅ kinh độ vĩ độ -->
+    <div id="mouse-position" 
+      style="position: absolute;bottom: 0px;right: 11%;font-size: 14px;color: #444;background: rgba(255, 255, 255, 0.6);padding: 2px 6px;border-radius: 3px;z-index: 999;font-family: sans-serif;box-shadow: 0 0 2px rgba(0,0,0,0.1);">
+    </div>
+    <script type="module" src="main.js"></script>
   </body>
 </html>

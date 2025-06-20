@@ -53,20 +53,19 @@
       const user = document.getElementById('username').value.trim();
       const pass = document.getElementById('password').value.trim();
       fetch('http://localhost:3000/api/login', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ username: user, password: pass })
-})
-.then(res => res.json())
-.then(data => {
-  if (data.error) return alert(data.error);
-  localStorage.setItem('role', data.role);
-  localStorage.setItem('username', data.username);
-  window.location.href = 'index.html';
-})
-.catch(err => alert('Lỗi đăng nhập: ' + err.message));
-
-    });
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: user, password: pass })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) return alert(data.error);
+        localStorage.setItem('role', data.role);
+        localStorage.setItem('username', data.username);
+        window.location.href = 'index.html';
+      })
+      .catch(err => alert('Lỗi đăng nhập: ' + err.message));
+      });
   </script>
 </body>
 </html>
