@@ -66,6 +66,7 @@
             <th>Thời gian</th>
             <th>Đánh giá</th>
             <th>Phí gửi xe</th>
+            <th>Hình ảnh</th>
             <th>Thao tác</th>
           </tr>
         </thead>
@@ -89,17 +90,18 @@
           <input class="form-control mb-2" placeholder="Khu vực" id="khu_vuc" />
           <input class="form-control mb-2" placeholder="Số điện thoại" id="so_dien_th" />
           <input class="form-control mb-2" placeholder="Mô hình" id="mo_hinh" />
-          <input class="form-control mb-2" placeholder="Sức chứa tối thiểu" id="suc_chua_min" type="number" />
-          <input class="form-control mb-2" placeholder="Sức chứa tối đa" id="suc_chua_max" type="number" />
-          <input class="form-control mb-2" placeholder="Giá thấp nhất" id="gia_min" type="number" />
-          <input class="form-control mb-2" placeholder="Giá cao nhất" id="gia_max" type="number" />
-          <input class="form-control mb-2" placeholder="Diên tích tối thiểu" id="dien_tich_min" type="number" />
-          <input class="form-control mb-2" placeholder="Diện tích tối đa" id="dien_tich_max" type="number" />
+          <input class="form-control mb-2" placeholder="Sức chứa tối thiểu" id="suc_chua_min" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Sức chứa tối đa" id="suc_chua_max" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Diện tích tối thiểu" id="dien_tich_min" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Diện tích tối đa" id="dien_tich_max" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Giá thấp nhất" id="gia_min" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Giá cao nhất" id="gia_max" type="number" min="1" />
           <input class="form-control mb-2" placeholder="Kinh độ" id="kinh_do" type="number" step="any" />
           <input class="form-control mb-2" placeholder="Vĩ độ" id="vi_do" type="number" step="any" />
           <input class="form-control mb-2" placeholder="Thời gian" id="thoi_gian" />
           <input class="form-control mb-2" placeholder="Đánh giá (0-5)" id="danh_gia" type="number" step="0.1" />
           <input class="form-control mb-2" placeholder="Phí gửi xe" id="gui_xe" />
+          <input class="form-control mb-2" placeholder="URL hình ảnh" id="hinh_anh" />
         </div>
         <div class="modal-footer">
           <button type="submit" class="btn btn-success">Lưu</button>
@@ -140,6 +142,7 @@
             <td>${r.thoi_gian}</td>
             <td>${r.danh_gia}</td>
             <td>${r.gui_xe}</td>
+            <td><img src="${r.hinh_anh}" style="width: 150px; height: 100px; border-radius: 6px;" alt="Ảnh nhà hàng"></td>
             <td>
               <button class="btn btn-warning btn-sm" onclick='openEditModal(${JSON.stringify(r)})'>Sửa</button>
               <button class="btn btn-danger btn-sm" onclick="deleteRestaurant(${r.id})">Xoá</button>
@@ -179,6 +182,7 @@
   document.getElementById('thoi_gian').value = r.thoi_gian || '';
   document.getElementById('danh_gia').value = r.danh_gia || '';
   document.getElementById('gui_xe').value = r.gui_xe || '';
+  document.getElementById('hinh_anh').value = r.hinh_anh || '';
   modal.show();
 }
 
@@ -202,7 +206,8 @@
         vi_do: parseFloat(vi_do.value.replace(',', '.')),
         thoi_gian: thoi_gian.value,
         danh_gia: parseFloat(danh_gia.value.replace(',', '.')),
-        gui_xe: gui_xe.value
+        gui_xe: gui_xe.value,
+        hinh_anh: hinh_anh.value
       };
       
       const url = id ? `http://localhost:3000/api/nhahang/${id}` : 'http://localhost:3000/api/nhahang';
@@ -224,28 +229,21 @@
           nhahangs = data;
           renderRestaurants();
           modal.hide();
+          alert(id ? '✏️ Cập nhật nhà hàng thành công!' : '✅ Thêm nhà hàng thành công!');
         }).catch(err => alert(err.message));
     });
 
-    function deleteRestaurant(id, ten) {
-  if (!id) return alert("ID không hợp lệ!");
-
-  const xacNhan = confirm(`Bạn có muốn xoá nhà hàng không?`);
-  if (!xacNhan) return;
-
-  fetch(`http://localhost:3000/api/nhahang/${id}`, {
-    method: 'DELETE'
-  })
-    .then(res => {
-      if (!res.ok) throw new Error("Xoá thất bại");
-      return res.json();
-    })
-    .then(() => {
-      nhahangs = nhahangs.filter(r => r.id !== id);
-      location.reload(); 
-    })
-    .catch(err => console.error(err.message)); 
-}
+   async function deleteRestaurant(id) {
+      if (!confirm('Bạn có chắc chắn muốn xoá?')) return;
+      try {
+        await fetch(`/api/nhahang/${id}`, { method: 'DELETE' });
+        nhahangs = nhahangs.filter(r => r.id !== id);
+        renderRestaurants();
+        alert('🗑️ Đã xoá nhà hàng thành công!', 'danger');
+      } catch (err) {
+        alert('❌ Lỗi xoá dữ liệu!', 'danger');
+      }
+    }
 
     // Nếu có tọa độ mới, mở modal thêm nhà hàng và điền sẵn
     if (window.location.hash === '#add') {

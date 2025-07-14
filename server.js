@@ -15,18 +15,18 @@ const pool = new Pool({
   password: 'van2003',
   port: 5432
 });
-// đăng nhập
+// đăng ký
 app.post('/api/register', async (req, res) => {
   const { username, password, email } = req.body;
   const hash = await bcrypt.hash(password, 10);
   try {
-    await pool.query('INSERT INTO users (username, password, email) VALUES ($1, $2, $3)', [username, hash, email]);
+    await pool.query('INSERT INTO users (username, password, email) VALUES ($1, $2, $3)', [username, hash, email,]);
     res.json({ success: true });
   } catch (err) {
     res.status(400).json({ error: 'Tài khoản đã tồn tại!' });
   }
 });
-// đăng ký
+// đăng nhập
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -35,9 +35,9 @@ app.post('/api/login', async (req, res) => {
   const user = result.rows[0];
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(401).json({ error: 'Sai mật khẩu!' });
-  const adminUsers = ['admin', 'nguyendinhvan', 'van2003']; // Thêm các tài khoản được xem là quản trị
-  const role = adminUsers.includes(user.username) ? 'admin' : 'user';
-  //const role = user.role || 'user'; 
+  //const adminUsers = ['admin', 'nguyendinhvan', 'van2003']; // Thêm các tài khoản được xem là quản trị
+  //const role = adminUsers.includes(user.username) ? 'admin' : 'user';
+  const role = user.role || 'user'; 
   res.json({ success: true, role, username: user.username });
 });
 

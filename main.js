@@ -25,6 +25,8 @@ let radiusLayer = null;
 let routeLayer = null;
 let userLocation = null;
 let markerLayers = [];
+let clickedFeature = null;
+let isRoutingActive = false;
 // Khởi tạo bản đồ OSM
 const map = new Map({
   target: 'map',
@@ -62,53 +64,6 @@ map.addLayer(satelliteLayer);
 document.getElementById('toggleSatellite').addEventListener('change', function () {
   satelliteLayer.setVisible(this.checked);
 });
-// gán cho nút switch nhà hàng
-document.getElementById('toggleRestaurant').addEventListener('change', function () {
-  const isChecked = this.checked;
-  vectorLayer.setVisible(isChecked);
-  if (isChecked) {
-    // Khi bật lớp nhà hàng => tắt label
-    showLabel = false;
-    document.getElementById('toggleLabel').checked = false;
-    vectorLayer.setStyle(iconWithLabelStyle);
-  }
-});
-// gán cho nút switch phường
-document.getElementById('togglePhuong').addEventListener('change', function () {
-  phuongBacTuLiemLayer.setVisible(this.checked);
-});
-// gán cho nút bật tắt lable
-document.getElementById('toggleLabel').addEventListener('change', function () {
-  showLabel = this.checked;
-  vectorLayer.setStyle(iconWithLabelStyle); // cập nhật lại style
-});
-//WFS dữ liệu phường
-const phuongBacTuLiemLayer = new VectorLayer({
-  source: new VectorSource({
-    url: '/geoserver/QLNH/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=QLNH:Diaphan_Bactuliem&outputFormat=application/json&maxFeatures=50',
-    format: new GeoJSON()
-  }),
-  visible: false, 
-  style: function (feature) {
-    return new Style({
-      stroke: new Stroke({
-        color: 'rgb(168, 32, 32)',  
-        width: 2
-      }),
-      fill: new Fill({
-        color: 'rgba(0,0,0,0)' 
-      }),
-      text: new Text({
-        text: feature.get('phuong') || '',  
-        font: 'bold 12px Arial',
-        fill: new Fill({ color: '#000' }),
-        stroke: new Stroke({ color: '#fff', width: 2 })
-      })
-    });
-  }
-});
-
-map.addLayer(phuongBacTuLiemLayer);
 // WFS dữ liệu nhà hàng
 const vectorSource = new VectorSource({
   format: new GeoJSON(),
@@ -120,7 +75,7 @@ let showLabel = true; // biến toàn cục
 const iconWithLabelStyle = function (feature) {
   return new Style({
     image: new Icon({
-      src: 'nhahang.png',
+      src: 'images/nhahang.png',
       crossOrigin: 'anonymous',
       scale: 0.08,
       anchor: [0.5, 1]
@@ -139,10 +94,10 @@ const iconWithLabelStyle = function (feature) {
 const vectorLayer = new VectorLayer({
   source: vectorSource,
   style: iconWithLabelStyle,
-  visible: false
 });
 vectorLayer.setZIndex(10);
 map.addLayer(vectorLayer);
+
 // Vị trí người dùng và vẽ vòng tròn
 document.getElementById('my-location-btn').addEventListener('click', () => {
   if (navigator.geolocation) {
@@ -160,7 +115,7 @@ document.getElementById('my-location-btn').addEventListener('click', () => {
         locationFeature.setStyle(
           new Style({
             image: new Icon({
-              src: 'vitri.png',
+              src: 'images/vitri.png',
               scale: 0.05,
             }),
           })
@@ -239,7 +194,7 @@ map.on('singleclick', function (evt) {
     delete properties.geometry;
 
     let html = '<table style="width:100%; border-collapse: collapse;">';
-    const fieldsToShow = ['ten', 'dia_chi','khu_vuc','so_dien_th','mo_hinh', 'thoi_gian', 'danh_gia']; 
+    const fieldsToShow = ['ten', 'dia_chi','khu_vuc','so_dien_th','mo_hinh','dien_tich_max','gia_max', 'thoi_gian', 'danh_gia']; 
     fieldsToShow.forEach((key) => {
     //for (let key in properties) {
         const label = labels[key];
@@ -251,6 +206,19 @@ map.on('singleclick', function (evt) {
         </tr>`;
     });
     html += '</table>';
+
+//thêm ảnh 
+    const imageUrl = properties.hinh_anh;
+    if (imageUrl) {
+      html += `
+        <div style="margin: 10px 0; text-align: center;">
+          <img src="${imageUrl}" alt="Hình ảnh nhà hàng"
+              style="width: 100%; max-width: 250px; max-height: 180px; object-fit: cover; border-radius: 6px;">
+        </div>
+      `;
+    }
+
+//thêm nút chỉ đường
     html += `<div style="margin-top: 8px;">
       <button id="routeBtn" style="padding: 6px 12px; background-color: #2563eb; color: white; border: none; border-radius: 4px; cursor: pointer;">
         🔍 Chỉ đường
@@ -341,7 +309,6 @@ function getDirectionIcon(modifier) {
   }
 }
 // Chỉ đường
-let clickedFeature = null;
 document.addEventListener('click', function (e) {
   if (e.target && e.target.id === 'routeBtn') {
     if (!userLocation) {
@@ -355,6 +322,12 @@ document.addEventListener('click', function (e) {
     }
         
     popupOverlay.setPosition(undefined); // Ẩn popup khi vẽ đường
+    // 👉 Xoá vòng tròn bán kính nếu có
+    if (radiusLayer) {
+      map.removeLayer(radiusLayer);
+      radiusLayer = null;
+    }
+    isRoutingActive = true;// bắt buộc ấn nút thoát chỉ đường
     // Chỉ hiển thị nhà hàng được chọn
     vectorSource.clear();
     vectorSource.addFeature(clickedFeature);
@@ -427,6 +400,7 @@ document.addEventListener('click', function (e) {
 });
 // nút thoát chỉ đường
 window.hideDirectionBox = function () {
+  isRoutingActive = false;
   // Ẩn bảng chỉ đường
   const box = document.getElementById('direction-box');
   box.style.display = 'none';
@@ -484,7 +458,8 @@ searchInput.addEventListener('input', function () {
   vectorSource.clear();
   vectorSource.addFeatures(matchedStores);
 
-  matchedStores.slice(0, 10).forEach((feature) => {
+  //matchedStores.slice(0, 10).forEach((feature) => { hiển thị 10 quán khi tìm kiếm
+  matchedStores.forEach((feature) => {
     const ten = feature.get('ten');
     const li = document.createElement('li');
     li.innerHTML = `<i class="fa-solid fa-utensils"></i> ${ten}`;
@@ -501,7 +476,7 @@ searchInput.addEventListener('input', function () {
       const popupContent = document.getElementById('popup-content');
       const popupOverlay = map.getOverlays().item(0);
       popupContent.innerHTML = `<strong>${ten}</strong>`;
-      popupOverlay.setPosition(coords);
+      popupOverlay.setPosition(undefined); 
     });
     suggestionList.appendChild(li);
   });
@@ -518,6 +493,10 @@ document.getElementById('apply-filter').addEventListener('click', () => {
     alert('Dữ liệu chưa sẵn sàng!');
     return;
   }
+  if (isRoutingActive) {
+  alert('Vui lòng thoát chỉ đường trước!');
+  return;
+  } 
   clearAllMapState();
   const timeRange = document.getElementById('filter-time').value;
   const area = document.getElementById('filter-area').value;
@@ -600,7 +579,7 @@ if (rating !== '') {
     '2': [2.0, 2.9],
     '3': [3.0, 3.9],
     '4': [4.0, 4.9],
-    '5': [5.0, 5.0]  // ✅ Cho phép khoảng gần 5
+    '5': [5.0, 5.0]  
   };
   const [minR, maxR] = ranges[rating];
   filtered = filtered.filter(f => {
@@ -672,6 +651,10 @@ if (!isNaN(radius)) {
   });
 // Sắp xếp từ gần đến xa
   filtered.sort((a, b) => a.get('distance') - b.get('distance'));
+  filtered = filtered.slice(0,10)
+// Cập nhật lại vectorSource chỉ với 10 nhà hàng
+  vectorSource.clear();
+  vectorSource.addFeatures(filtered);
 // Hiển thị danh sách
     filtered.forEach(f => {
       const ten = f.get('ten') || 'Không rõ tên';
@@ -763,6 +746,10 @@ function clearAllMapState() {
 
 // tìm nút nhà hàng gần nhất
 document.getElementById('nearest-btn').addEventListener('click', () => {
+  if (isRoutingActive) {
+  alert('Vui lòng thoát chỉ đường trước!');
+  return;
+  }
   clearAllMapState();
   if (!userLocation) return alert('Hãy bấm "Vị trí của tôi" trước!');
   if (!allFeatures.length) return alert('Dữ liệu nhà hàng chưa sẵn sàng!');
@@ -825,6 +812,10 @@ document.getElementById('nearest-btn').addEventListener('click', () => {
 });
 // Click vào bản đồ để tạo mới nhà hàng
 map.on('dblclick', function (evt) {
+  if (isRoutingActive) {
+  alert('Vui lòng thoát chỉ đường trước!');
+  return;
+  }
   const feature = map.forEachFeatureAtPixel(evt.pixel, function (feat) {
     return feat;
   });

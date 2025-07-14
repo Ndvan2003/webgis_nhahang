@@ -39,7 +39,7 @@
           </div>
 
           <select id="filter-time">
-            <option value="">Giờ mở cửa</option>
+            <option value="">Giờ hoạt động</option>
             <option value="morning">Buổi sáng (8h - 12h)</option>
             <option value="afternoon">Buổi trưa (12h - 17h)</option>
             <option value="evening">Buổi chiều tối (17h - 23h)</option>
@@ -66,10 +66,10 @@
           <select id="filter-rating">
             <option value="">Đánh giá</option>
             <option value="1">1 ⭐</option>
-            <option value="2">2 ⭐⭐</option>
-            <option value="3">3 ⭐⭐⭐</option>
-            <option value="4">4 ⭐⭐⭐⭐</option>
-            <option value="5">5 ⭐⭐⭐⭐⭐</option>
+            <option value="2">2 ⭐</option>
+            <option value="3">3 ⭐</option>
+            <option value="4">4 ⭐</option>
+            <option value="5">5 ⭐</option>
           </select>
 
           <select id="filter-radius">
@@ -98,7 +98,7 @@
       <div class="main">
         <div id="map" class="map"></div>
         <div id="suggest-box"><ul id="suggestions" class="suggestion-box"></ul></div>
-        <button id="suggest-btn" class="map-button">Danh sách quán</button>
+        <button id="suggest-btn" class="map-button">Danh sách nhà hàng</button>
       </div>
     </div>
 
@@ -107,9 +107,9 @@
       /*thay đổi avata người dùng và quản trị viên*/
       const avatar = document.getElementById('avatar-img');
         if (role === 'admin') {
-          avatar.src = 'user.png';
+          avatar.src = 'images/user.png';
         } else {
-          avatar.src = 'logo_hanoi.png';
+          avatar.src = 'images/logo_hanoi.png';
         }
       /* người dùng và quản trị viên*/
       if (role !== 'admin') {
@@ -120,7 +120,7 @@
       }
     </script>
     <div id="list-container" style="display: none; position: fixed; top: 150px; right: 10px; width: 280px; max-height: 400px; overflow-y: auto; background: #fff; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.2); padding: 12px; z-index: 1500;">
-      <h5>📋 Danh sách quán </h5>
+      <h5>📋 Danh sách nhà hàng </h5>
       <ul id="list-results" style="list-style: none; padding-left: 0;"></ul>
     </div>
     <div id="direction-box" style="position: absolute; top: 150px; left: 10px; width: 380px; max-height: 55vh; overflow-y: auto; background: white; border: 1px solid #ccc; border-radius: 6px; padding: 10px; z-index: 9999; display: none;">
@@ -137,30 +137,6 @@
       <span style="color: rgb(17, 10, 10); margin-left: 8px;">🗺️ Vệ tinh</span>
       <label class="switch">
         <input type="checkbox" id="toggleSatellite">
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <!-- ✅ Nút Nhà hàng -->
-    <div style="position: absolute; bottom: 70px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
-      <span style="color: rgb(17, 10, 10); margin-left: 8px;">🍽️ Nhà hàng</span>
-      <label class="switch">
-        <input type="checkbox" id="toggleRestaurant">
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <!-- ✅ Nút Phường -->
-    <div style="position: absolute; bottom: 120px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
-      <span style="color: rgb(17, 10, 10); margin-left: 8px;">🧭 Phường</span>
-      <label class="switch">
-        <input type="checkbox" id="togglePhuong">
-        <span class="slider round"></span>
-      </label>
-    </div>
-    <!-- ✅ Nút Tên quán  -->
-    <div style="position: absolute; bottom: 170px; left: 15px; z-index: 1000; background: rgb(202, 118, 118); padding: 6px 10px; border-radius: 20px; display: flex; align-items: center; gap: 6px;">
-      <span style="color: rgb(17, 10, 10); margin-left: 8px;">🏷️ Tên quán</span>
-      <label class="switch">
-        <input type="checkbox" id="toggleLabel" >
         <span class="slider round"></span>
       </label>
     </div>

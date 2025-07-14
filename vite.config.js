@@ -9,5 +9,5 @@ export default {
         rewrite: (path) => path.replace(/^\/geoserver/, '/geoserver')
       }
     }
-  }
+  },
 }
