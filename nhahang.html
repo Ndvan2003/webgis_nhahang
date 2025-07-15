@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <title>Quản lý Nhà hàng</title>
+  <title>Quản lý vị trí nhà hàng</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
    <script>
@@ -35,7 +35,7 @@
   <nav class="navbar navbar-expand-lg navbar-dark bg-success px-4">
     <a class="navbar-brand" href="index.html">Trang chủ</a>
     <ul class="navbar-nav ms-auto d-flex flex-row gap-3">
-      <li class="nav-item"><a class="nav-link text-white" href="nhahang.html">Quản lý nhà hàng</a></li>
+      <li class="nav-item"><a class="nav-link text-white" href="nhahang.html">Quản lý vị trí nhà hàng</a></li>
       <li class="nav-item"><a class="nav-link text-white" href="#" onclick="logout()">Đăng xuất</a></li>
     </ul>
   </nav>
@@ -55,12 +55,12 @@
             <th>Khu vực</th>
             <th>SĐT</th>
             <th>Mô hình</th>
-            <th>Sức chứa min</th>
-            <th>Sức chứa max</th>
-            <th>Diện tích min</th>
-            <th>Diện tích max</th>
-            <th>Giá min</th>
-            <th>Giá max</th>
+            <th>Sức chứa min(người)</th>
+            <th>Sức chứa max(người)</th>
+            <th>Diện tích min(m2)</th>
+            <th>Diện tích max(m2)</th>
+            <th>Giá min(VNĐ)</th>
+            <th>Giá max(VNĐ)</th>
             <th>Kinh độ</th>
             <th>Vĩ độ</th>
             <th>Thời gian</th>
@@ -90,12 +90,12 @@
           <input class="form-control mb-2" placeholder="Khu vực" id="khu_vuc" />
           <input class="form-control mb-2" placeholder="Số điện thoại" id="so_dien_th" />
           <input class="form-control mb-2" placeholder="Mô hình" id="mo_hinh" />
-          <input class="form-control mb-2" placeholder="Sức chứa tối thiểu" id="suc_chua_min" type="number" min="1" />
-          <input class="form-control mb-2" placeholder="Sức chứa tối đa" id="suc_chua_max" type="number" min="1" />
-          <input class="form-control mb-2" placeholder="Diện tích tối thiểu" id="dien_tich_min" type="number" min="1" />
-          <input class="form-control mb-2" placeholder="Diện tích tối đa" id="dien_tich_max" type="number" min="1" />
-          <input class="form-control mb-2" placeholder="Giá thấp nhất" id="gia_min" type="number" min="1" />
-          <input class="form-control mb-2" placeholder="Giá cao nhất" id="gia_max" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Sức chứa tối thiểu (người)" id="suc_chua_min" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Sức chứa tối đa (người)" id="suc_chua_max" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Diện tích tối thiểu (m2)" id="dien_tich_min" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Diện tích tối đa (m2)" id="dien_tich_max" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Giá thấp nhất (VNĐ)" id="gia_min" type="number" min="1" />
+          <input class="form-control mb-2" placeholder="Giá cao nhất (VNĐ)" id="gia_max" type="number" min="1" />
           <input class="form-control mb-2" placeholder="Kinh độ" id="kinh_do" type="number" step="any" />
           <input class="form-control mb-2" placeholder="Vĩ độ" id="vi_do" type="number" step="any" />
           <input class="form-control mb-2" placeholder="Thời gian" id="thoi_gian" />

@@ -19,7 +19,14 @@ import XYZ from 'ol/source/XYZ';
 import MousePosition from 'ol/control/MousePosition';
 import { createStringXY } from 'ol/coordinate';
 
+//  Ẩn nút Danh sách nhà hàng mặc định
+const suggestBtn = document.getElementById('suggest-btn');
+if (suggestBtn) suggestBtn.style.display = 'none';
 
+function showSuggestButton(ifHasResult = true){
+  if (!suggestBtn) return;
+  suggestBtn.style.display = ifHasResult ? 'block' : 'none';
+}
 // khai báo biến 
 let radiusLayer = null;
 let routeLayer = null;
@@ -176,8 +183,8 @@ map.addOverlay(popupOverlay);
 
 const labels = {
   ten: 'Tên nhà hàng', dia_chi: 'Địa chỉ', mo_ta: 'Mô tả', khu_vuc: 'Khu vực',
-  so_dien_th: 'Số điện thoại', mo_hinh: 'Mô hình', suc_chua_min: 'Sức chứa min',
-  suc_chua_max: 'Sức chứa max', dien_tich_min: 'Diện tích min (m²)', dien_tich_max: 'Diện tích max (m²)',
+  so_dien_th: 'Số điện thoại', mo_hinh: 'Mô hình', suc_chua_min: 'Sức chứa min (người)',
+  suc_chua_max: 'Sức chứa max (người)', dien_tich_min: 'Diện tích min (m²)', dien_tich_max: 'Diện tích max (m²)',
   gia_min: 'Giá tối thiểu (nghìn)', gia_max: 'Giá tối đa (nghìn)', kinh_do: 'Kinh độ',
   vi_do: 'Vĩ độ', thoi_gian: 'Giờ hoạt động', danh_gia: 'Đánh giá', gui_xe: 'Gửi xe'
 };
@@ -186,7 +193,6 @@ map.on('singleclick', function (evt) {
   const feature = map.forEachFeatureAtPixel(evt.pixel, function (feat) {
     return feat;
   });
-
   if (feature) {
     clickedFeature = feature; 
     const coordinates = feature.getGeometry().getCoordinates(); 
@@ -194,7 +200,7 @@ map.on('singleclick', function (evt) {
     delete properties.geometry;
 
     let html = '<table style="width:100%; border-collapse: collapse;">';
-    const fieldsToShow = ['ten', 'dia_chi','khu_vuc','so_dien_th','mo_hinh','dien_tich_max','gia_max', 'thoi_gian', 'danh_gia']; 
+    const fieldsToShow = ['ten', 'dia_chi','khu_vuc','so_dien_th','mo_hinh','suc_chua_max','gia_max', 'thoi_gian', 'danh_gia']; 
     fieldsToShow.forEach((key) => {
     //for (let key in properties) {
         const label = labels[key];
@@ -224,10 +230,12 @@ map.on('singleclick', function (evt) {
         🔍 Chỉ đường
       </button>
     </div>`;
-    popupContent.innerHTML = html;
-    popupOverlay.setPosition(coordinates);
+    showSidebarInfo(properties);      //  gọi sidebar
+    popupOverlay.setPosition(undefined);
   } else {
     popupOverlay.setPosition(undefined);
+    const sb = document.getElementById('sidebar-info');
+    if (sb) sb.style.display = 'none';// ẩn sidebar
   }
 });
 popupCloser.onclick = function () {
@@ -311,6 +319,7 @@ function getDirectionIcon(modifier) {
 // Chỉ đường
 document.addEventListener('click', function (e) {
   if (e.target && e.target.id === 'routeBtn') {
+    document.getElementById('sidebar-info').style.display = 'none';
     if (!userLocation) {
       alert('Vui lòng nhấn "Vị trí của tôi" trước!');
       return;
@@ -499,7 +508,7 @@ document.getElementById('apply-filter').addEventListener('click', () => {
   } 
   clearAllMapState();
   const timeRange = document.getElementById('filter-time').value;
-  const area = document.getElementById('filter-area').value;
+   const capacity = document.getElementById('filter-capacity').value;
   const price = document.getElementById('filter-price').value;
   const rating = document.getElementById('filter-rating').value;
   const radius = parseFloat(document.getElementById('filter-radius').value);
@@ -539,20 +548,20 @@ document.getElementById('apply-filter').addEventListener('click', () => {
       });
     });
   }
-  // Lọc diện tích
-  if (area !== '') {
+  // Lọc sức chứa
+   if (capacity !== '') {
     const ranges = {
-      '1': [50, 200],
-      '2': [201, 400],
-      '3': [401, 600],
-      '4': [601, 800],
-      '5': [801, Infinity],
+      '1': [0, 100],
+      '2': [101, 200],
+      '3': [201, 300],
+      '4': [301, 400],
+      '5': [401, 500],
+      '6': [501, Infinity],
     };
-    const [min, max] = ranges[area];
+    const [min, max] = ranges[capacity];
     filtered = filtered.filter(f => {
-      const minA = f.get('dien_tich_min') || 0;
-      const maxA = f.get('dien_tich_max') || 0;
-      return maxA >= min && minA <= max;
+      const maxCap = f.get('suc_chua_max') || 0;
+      return maxCap >= min && maxCap <= max;
     });
   }
 
@@ -566,9 +575,8 @@ document.getElementById('apply-filter').addEventListener('click', () => {
     };
     const [min, max] = ranges[price];
     filtered = filtered.filter(f => {
-      const minG = f.get('gia_min') || 0;
       const maxG = f.get('gia_max') || 0;
-      return maxG >= min && minG <= max;
+      return maxG >= min && maxG <= max;
     });
   }
 
@@ -689,7 +697,7 @@ if (!isNaN(radius)) {
 
   // 👉 Reset tất cả select lọc sau khi tìm kiếm
   document.getElementById('filter-time').value = '';
-  document.getElementById('filter-area').value = '';
+  document.getElementById('filter-capacity').value = '';
   document.getElementById('filter-price').value = '';
   document.getElementById('filter-rating').value = '';
   document.getElementById('filter-radius').value = '';
@@ -852,6 +860,65 @@ if (localStorage.getItem('role') === 'user') {
   if (userBtn) userBtn.style.display = 'none';
   if (restBtn) restBtn.style.display = 'none';
 }
+/* ---------- SIDEBAR HIỂN THỊ THÔNG TIN ---------- */
+function showSidebarInfo(properties) {
+  const sidebar   = document.getElementById('sidebar-info');
+  const container = document.getElementById('sidebar-content');
+  if (!sidebar || !container) return;
+
+  // xây dựng bảng thông tin
+  let html = `<table style="width:100%;border-collapse:collapse;">`;
+  const rows = [
+    ['Tên nhà hàng', properties.ten],
+    ['Địa chỉ', properties.dia_chi],
+    ['Khu vực', properties.khu_vuc],
+    ['Số điện thoại', properties.so_dien_th],
+    ['Mô hình', properties.mo_hinh],
+    ['Sức chứa (người)', properties.suc_chua_max],
+    ['Giá (nghìn)', properties.gia_max],
+    ['Giờ hoạt động', properties.thoi_gian],
+    ['Đánh giá', properties.danh_gia ? parseFloat(properties.danh_gia).toFixed(1) : '']
+  ];
+  rows.forEach(r => {
+    html += `
+      <tr>
+        <td style="font-weight:bold;padding:4px;border-bottom:1px solid #ccc;">${r[0]}</td>
+        <td style="padding:4px;border-bottom:1px solid #ccc;">${r[1] || ''}</td>
+      </tr>`;
+  });
+  html += `</table>`;
+
+  // ảnh minh hoạ (nếu có)
+  if (properties.hinh_anh) {
+    html += `
+      <div style="margin:10px 0;text-align:center;">
+        <img src="${properties.hinh_anh}" alt="Hình ảnh nhà hàng"
+             style="width:100%;max-height:140px;object-fit:cover;border-radius:6px;">
+      </div>`;
+  }
+
+  // nút chỉ đường
+  html += `
+    <button id="routeBtn"
+            style="width:100%;padding:8px;background:#2563eb;color:#fff;
+                   border:none;border-radius:6px;cursor:pointer;">
+      🔍 Chỉ đường
+    </button>`;
+
+  container.innerHTML = html;
+  sidebar.style.display = 'block';
+}
+
+// Nút đóng sidebar
+document.addEventListener('DOMContentLoaded', () => {
+  const closeBtn = document.getElementById('closeSidebar');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      const sb = document.getElementById('sidebar-info');
+      if (sb) sb.style.display = 'none';
+    });
+  }
+});
 
 
 

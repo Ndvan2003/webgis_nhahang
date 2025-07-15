@@ -1,4 +1,3 @@
-<!-- login.html -->
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -6,28 +5,69 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Đăng nhập hệ thống</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@latest/ol.css" />
   <style>
-    body {
-      background: #f5f5f5;
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      overflow: hidden;
       font-family: 'Segoe UI', sans-serif;
     }
-    .login-container {
-      min-height: 100vh;
-    }
-    .login-box {
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    #map {
+      position: fixed;
+      top: 0;
+      left: 0;
       width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+    .overlay-form {
+      position: relative;
+      z-index: 1000;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 12px;
+      padding: 30px;
       max-width: 420px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      width: 100%;
+      transition: opacity 0.3s ease;
+    }
+    #formContainer.hidden {
+      display: none !important;
+    }
+    .toggle-btn {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1500;
+      background-color: #299B63;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    .toggle-btn:hover {
+      background-color: #217c50;
+    }
+    .overlay-form h3 {
+      color: #299B63;
+      text-align: center;
+      margin-bottom: 20px;
     }
   </style>
 </head>
 <body>
-  <div class="container d-flex justify-content-center align-items-center login-container">
-    <div class="login-box">
-      <h3 class="text-center text-success mb-4"> TRA CỨU NHÀ HÀNG</h3>
+  <div id="map"></div>
+
+  <button id="toggleButton" class="toggle-btn">Xem bản đồ</button>
+
+  <div id="formContainer" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
+    <div class="overlay-form">
+      <h3>TRA CỨU NHÀ HÀNG</h3>
       <form id="login-form">
         <div class="mb-3">
           <label for="username" class="form-label">Tên đăng nhập</label>
@@ -41,11 +81,95 @@
           <button type="submit" class="btn btn-success">Đăng nhập</button>
         </div>
         <div class="text-center mt-3">
-            Chưa có tài khoản? <a href="register.html">Đăng ký</a>
+          Chưa có tài khoản? <a href="register.html">Đăng ký</a>
         </div>
       </form>
     </div>
   </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/ol@latest/dist/ol.js"></script>
+  <script>
+    // Bản đồ
+    const map = new ol.Map({
+      target: 'map',
+      layers: [
+        new ol.layer.Tile({ source: new ol.source.OSM() })
+      ],
+      view: new ol.View({
+        center: ol.proj.fromLonLat([105.773841, 21.072439]),
+        zoom: 15
+      }),
+      controls: []
+    });
+
+    // Vector source & layer cho marker
+    const vectorSource = new ol.source.Vector();
+    const vectorLayer = new ol.layer.Vector({
+      source: vectorSource
+    });
+    map.addLayer(vectorLayer);
+
+    // Load dữ liệu nhà hàng
+    function loadNhahangMarkers() {
+      fetch('http://localhost:3000/api/nhahang')
+        .then(res => res.json())
+        .then(data => {
+          data.forEach(item => {
+            if (!item.kinh_do || !item.vi_do) return;
+            const feature = new ol.Feature({
+              geometry: new ol.geom.Point(ol.proj.fromLonLat([item.kinh_do, item.vi_do])),
+              name: item.ten
+            });
+            feature.setStyle(new ol.style.Style({
+              image: new ol.style.Icon({
+                src: 'images/nhahang.png',
+                scale: 0.08,
+                anchor: [0.5, 1]
+              }),
+              text: new ol.style.Text({
+                text: item.ten || '',
+                offsetY: -35,
+                font: 'bold 13px Arial',
+                fill: new ol.style.Fill({ color: '#000' }),
+                stroke: new ol.style.Stroke({ color: '#fff', width: 3 })
+              })
+            }));
+            vectorSource.addFeature(feature);
+          });
+        })
+        .catch(err => console.error('❌ Lỗi tải dữ liệu nhà hàng:', err));
+    }
+    loadNhahangMarkers();
+
+    // Bắt click vào marker
+    map.on('singleclick', function(evt) {
+      const features = map.getFeaturesAtPixel(evt.pixel);
+      if (features && features.length > 0) {
+        const feature = features[0];
+        const ten = feature.get('name') || 'Nhà hàng';
+        alert(`Vui lòng đăng nhập để xem chi tiết: ${ten}`);
+        formContainer.classList.remove('hidden');
+        toggleBtn.textContent = 'Xem bản đồ';
+        isFormVisible = true;
+      }
+    });
+
+    // Toggle ẩn/hiện form
+    const toggleBtn = document.getElementById('toggleButton');
+    const formContainer = document.getElementById('formContainer');
+    let isFormVisible = true;
+
+    toggleBtn.addEventListener('click', () => {
+      if (isFormVisible) {
+        formContainer.classList.add('hidden');
+        toggleBtn.textContent = 'Đăng nhập';
+      } else {
+        formContainer.classList.remove('hidden');
+        toggleBtn.textContent = 'Xem bản đồ';
+      }
+      isFormVisible = !isFormVisible;
+    });
+  </script>
 
   <script>
     document.getElementById('login-form').addEventListener('submit', function(e) {
@@ -65,7 +189,7 @@
         window.location.href = 'index.html';
       })
       .catch(err => alert('Lỗi đăng nhập: ' + err.message));
-      });
+    });
   </script>
 </body>
 </html>

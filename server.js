@@ -17,15 +17,24 @@ const pool = new Pool({
 });
 // đăng ký
 app.post('/api/register', async (req, res) => {
-  const { username, password, email } = req.body;
-  const hash = await bcrypt.hash(password, 10);
+  const { username, password, email, role } = req.body;
+  if (!username || !password || !email || !role) {
+    return res.status(400).json({ error: 'Thiếu thông tin!' });
+  }
+
   try {
-    await pool.query('INSERT INTO users (username, password, email) VALUES ($1, $2, $3)', [username, hash, email,]);
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query(
+      'INSERT INTO users (username, password, email, role) VALUES ($1, $2, $3, $4)',
+      [username, hash, email, role]
+    );
     res.json({ success: true });
   } catch (err) {
-    res.status(400).json({ error: 'Tài khoản đã tồn tại!' });
+    console.error('❌ Lỗi đăng ký:', err);
+    res.status(400).json({ error: 'Tài khoản đã tồn tại hoặc lỗi!' });
   }
 });
+
 // đăng nhập
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;

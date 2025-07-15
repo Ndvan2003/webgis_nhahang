@@ -33,8 +33,7 @@ img {
 
 .search {
   position: relative;
-  width: 60%;
-  justify-self: center;
+  margin-left: 12px;
 }
 /* ô tìm kiếm*/
 .search input {
@@ -58,13 +57,7 @@ img {
   color: #555;
 }
 
-/* avata*/
-.user {
-  position: relative;
-  width: 50px;
-  height: 50px;
-  justify-self: right;
-}
+
 
 /* main chiếm toàn bộ màn hình (không còn sidebar) */
 .main {
@@ -88,6 +81,7 @@ img {
   z-index: 1000;
 }
 .topbar {
+  align-items: center;
   position: fixed;
   top: 60px;
   left: 0;
@@ -100,7 +94,7 @@ img {
   justify-content: space-between;
   height: 70px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  overflow-x: auto;
+   
   flex-wrap: nowrap; /* đảm bảo 1 dòng */
   gap: 10px;
 }
@@ -173,35 +167,26 @@ body {
 .search-filter {
   display: flex;
   align-items: center;
-  gap: 8px;
-  justify-self: center;
-  flex-wrap: nowrap;
-  max-width: 100%;
-  overflow-x: auto;
+  gap: 12px;
+  flex-wrap: wrap;
 }
-
 .search-filter select,
 .search-filter button {
-  padding: 6px 10px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 8px;
   font-size: 14px;
   border: 1px solid #ccc;
-  border-radius: 8px;
-  background: #f5f5f5;
   white-space: nowrap;
 }
-
 .search-filter button {
-  background-color: #299B63;
-  color: white;
+  background: #299B63;
+  color: #fff;
   border: none;
-  font-weight: 500;
   cursor: pointer;
   transition: 0.2s;
 }
-
-.search-filter button:hover {
-  background-color: #217c50;
-}
+.search-filter button:hover {background:#217c50;}
 
 /* nút danh sách quán*/
 .map-button {
@@ -310,7 +295,7 @@ body {
   width: 150px;
 }
 /* Mức giá  */
-#filter-price {
+#filter-capacity {
   width: 110px;
 }
 
@@ -370,4 +355,47 @@ input:checked + .slider:before {
   transform: translateX(24px);
 }
 
+/* Avatar + tên tài khoản */
+.user{
+  width:70px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center; /* căn giữa dọc trong topbar */
+  gap:2px;
+  margin-left:8px;
+}
+#avatar-img{
+  width:40px;
+  height:40px;
+  border-radius:50%;
+}
+#username-label {
+  font-size: 16px;
+  font-weight: normal;
+  text-transform: none;
+  color: #444;
+  line-height: 1;
+}
+/*hiển thị thông tin quán*/
+.sidebar-info {
+  position: fixed;
+  top: 150px;
+  right: 10px;
+  width: 350px;
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  z-index: 2000;
+  padding: 16px;
+  overflow-y: auto;
+  max-height: 75vh;
+  font-size: 16px;
+  display: none;
+}
 
+.sidebar-info h4 {
+  margin-top: 0;
+  color: #1e40af;
+  font-size: 16px;
+}
