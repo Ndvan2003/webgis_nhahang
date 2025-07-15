@@ -190,8 +190,10 @@ const labels = {
 };
 // click maker
 map.on('singleclick', function (evt) {
-  const feature = map.forEachFeatureAtPixel(evt.pixel, function (feat) {
-    return feat;
+  const feature = map.forEachFeatureAtPixel(evt.pixel, function (feat, layer) {
+    if (layer === vectorLayer) {
+      return feat;
+    }
   });
   if (feature) {
     clickedFeature = feature; 
