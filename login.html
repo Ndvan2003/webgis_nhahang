@@ -64,6 +64,8 @@
   <div id="map"></div>
 
   <button id="toggleButton" class="toggle-btn">Xem bản đồ</button>
+  <button id="registerButton" class="toggle-btn" style="display: none; right: 150px;">Đăng ký</button>
+
 
   <div id="formContainer" class="d-flex justify-content-center align-items-center" style="height: 100vh;">
     <div class="overlay-form">
@@ -157,17 +159,24 @@
     // Toggle ẩn/hiện form
     const toggleBtn = document.getElementById('toggleButton');
     const formContainer = document.getElementById('formContainer');
+    const registerBtn = document.getElementById('registerButton');
     let isFormVisible = true;
 
     toggleBtn.addEventListener('click', () => {
       if (isFormVisible) {
         formContainer.classList.add('hidden');
         toggleBtn.textContent = 'Đăng nhập';
+        registerBtn.style.display = 'block'; // HIỆN NÚT ĐĂNG KÝ
       } else {
         formContainer.classList.remove('hidden');
         toggleBtn.textContent = 'Xem bản đồ';
+        registerBtn.style.display = 'none';  // ẨN NÚT ĐĂNG KÝ
       }
       isFormVisible = !isFormVisible;
+    });
+
+    registerBtn.addEventListener('click', () => {
+      window.location.href = 'register.html';
     });
   </script>
 

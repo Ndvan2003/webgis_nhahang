@@ -1,4 +1,3 @@
-
 const express = require('express');
 const app = express();
 const cors = require('cors');
@@ -15,7 +14,8 @@ const pool = new Pool({
   password: 'van2003',
   port: 5432
 });
-// đăng ký
+
+// Đăng ký
 app.post('/api/register', async (req, res) => {
   const { username, password, email, role } = req.body;
   if (!username || !password || !email || !role) {
@@ -35,7 +35,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// đăng nhập
+// Đăng nhập
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
@@ -44,13 +44,12 @@ app.post('/api/login', async (req, res) => {
   const user = result.rows[0];
   const match = await bcrypt.compare(password, user.password);
   if (!match) return res.status(401).json({ error: 'Sai mật khẩu!' });
-  //const adminUsers = ['admin', 'nguyendinhvan', 'van2003']; // Thêm các tài khoản được xem là quản trị
-  //const role = adminUsers.includes(user.username) ? 'admin' : 'user';
-  const role = user.role || 'user'; 
+
+  const role = user.role || 'user';
   res.json({ success: true, role, username: user.username });
 });
 
-// lấy ds người dùng
+// Lấy danh sách người dùng
 app.get('/api/users', async (req, res) => {
   try {
     const result = await pool.query('SELECT id, username, email, role FROM users ORDER BY id ASC');
@@ -59,7 +58,8 @@ app.get('/api/users', async (req, res) => {
     res.status(500).json({ error: 'Không thể lấy danh sách người dùng' });
   }
 });
-// xóa người dùng
+
+// Xoá người dùng
 app.delete('/api/users/:username', async (req, res) => {
   const { username } = req.params;
   try {
@@ -70,27 +70,25 @@ app.delete('/api/users/:username', async (req, res) => {
     res.status(500).json({ error: 'Không thể xoá người dùng' });
   }
 });
-//sửa người dùng
+
+// Sửa người dùng
 app.put('/api/users/:username', async (req, res) => {
   const { username } = req.params;
   const { email, role } = req.body;
-
   try {
     const result = await pool.query(
       'UPDATE users SET email = $1, role = $2 WHERE username = $3',
       [email, role, username]
     );
-
-    if (result.rowCount === 0)
-      return res.status(404).json({ error: 'Không tìm thấy người dùng' });
-
+    if (result.rowCount === 0) return res.status(404).json({ error: 'Không tìm thấy người dùng' });
     res.json({ success: true });
   } catch (err) {
     console.error('❌ Lỗi cập nhật người dùng:', err);
     res.status(500).json({ error: 'Lỗi server khi cập nhật' });
   }
 });
-// lấy dữ liệu nhà hàng 
+
+// Lấy dữ liệu nhà hàng
 app.get('/api/nhahang', async (req, res) => {
   try {
     const result = await pool.query('SELECT * FROM nhahang ORDER BY id ASC');
@@ -99,7 +97,8 @@ app.get('/api/nhahang', async (req, res) => {
     res.status(500).json({ error: 'Không thể lấy dữ liệu nhà hàng' });
   }
 });
-//thêm nhà hàng 
+
+// Thêm nhà hàng
 app.post('/api/nhahang', async (req, res) => {
   try {
     const {
@@ -134,7 +133,8 @@ app.post('/api/nhahang', async (req, res) => {
     res.status(500).json({ error: 'Lỗi thêm nhà hàng', chi_tiet: err.message });
   }
 });
-//sửa nhà hàng
+
+// Sửa nhà hàng
 app.put('/api/nhahang/:id', async (req, res) => {
   try {
     const id = req.params.id;
@@ -167,7 +167,8 @@ app.put('/api/nhahang/:id', async (req, res) => {
     res.status(500).json({ error: 'Lỗi khi cập nhật nhà hàng', chi_tiet: err.message });
   }
 });
-// xóa nhà hàng
+
+// Xoá nhà hàng
 app.delete('/api/nhahang/:id', async (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) {
@@ -180,6 +181,28 @@ app.delete('/api/nhahang/:id', async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Không thể xoá nhà hàng'});
+  }
+});
+
+// tăng lượt truy cập
+app.post('/api/incrementVisit', async (req, res) => {
+  try {
+    await pool.query('UPDATE visit_counter SET count = count + 1 WHERE id = 1');
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Lỗi tăng lượt truy cập:', err);
+    res.status(500).json({ error: 'Không thể tăng lượt truy cập' });
+  }
+});
+
+// lấy lượt truy cập
+app.get('/api/visitCount', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT count FROM visit_counter WHERE id = 1');
+    res.json({ count: result.rows[0].count });
+  } catch (err) {
+    console.error('❌ Lỗi lấy lượt truy cập:', err);
+    res.status(500).json({ error: 'Không thể lấy lượt truy cập' });
   }
 });
 
