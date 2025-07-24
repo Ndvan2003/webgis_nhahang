@@ -108,41 +108,36 @@ map.addLayer(vectorLayer);
 // Vị trí người dùng và vẽ vòng tròn
 document.getElementById('my-location-btn').addEventListener('click', () => {
   if (navigator.geolocation) {
+    // Yêu cầu trình duyệt lấy toạ độ hiện tại
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lon = position.coords.longitude;
         const lat = position.coords.latitude;
-        userLocation = [lon, lat];
+        userLocation = [lon, lat];  // lưu lại toạ độ để dùng cho các chức năng khác
 
+        // Tạo một Feature tại toạ độ của người dùng
         const locationFeature = new Feature({
           geometry: new Point(fromLonLat([lon, lat])),
           name: 'Vị trí của tôi',
         });
+        // Gán icon cho Feature
+        locationFeature.setStyle(new Style({
+          image: new Icon({
+            src: 'images/vitri.png',
+            scale: 0.05,
+          }),
+        }));
 
-        locationFeature.setStyle(
-          new Style({
-            image: new Icon({
-              src: 'images/vitri.png',
-              scale: 0.05,
-            }),
-          })
-        );
-
-        const locationSource = new VectorSource({
-          features: [locationFeature],
-        });
-
+        // Đưa Feature vào một VectorLayer và thêm lên map
         const locationLayer = new VectorLayer({
-          source: locationSource,
+          source: new VectorSource({ features: [locationFeature] })
         });
-
         map.addLayer(locationLayer);
-        markerLayers.push(locationLayer);
+        markerLayers.push(locationLayer);  // lưu lại để có thể xoá sau này
 
+        // Vẽ vòng tròn bán kính 1 000 m quanh vị trí
         if (radiusLayer) map.removeLayer(radiusLayer);
-        const circle = new CircleGeom(fromLonLat([lon, lat]), 1000);
-        const circleFeature = new Feature(circle);
-
+        const circleFeature = new Feature(new CircleGeom(fromLonLat([lon, lat]), 1000));
         radiusLayer = new VectorLayer({
           source: new VectorSource({ features: [circleFeature] }),
           style: new Style({
@@ -153,12 +148,12 @@ document.getElementById('my-location-btn').addEventListener('click', () => {
         radiusLayer.setZIndex(1);
         map.addLayer(radiusLayer);
 
+        // Thu phóng và tâm bản đồ về vị trí người dùng
         map.getView().animate({
           center: fromLonLat([lon, lat]),
           zoom: 16,
-          duration: 1000,
+          duration: 1000
         });
-
       },
       (error) => {
         console.error('Error getting location: ', error);
@@ -172,7 +167,6 @@ document.getElementById('my-location-btn').addEventListener('click', () => {
 
 // Popup và xử lý click nhà hàng
 const popupContainer = document.getElementById('popup');
-const popupContent = document.getElementById('popup-content');
 const popupCloser = document.getElementById('popup-closer');
 const popupOverlay = new Overlay({
   element: popupContainer,
@@ -196,11 +190,11 @@ map.on('singleclick', function (evt) {
     }
   });
   if (feature) {
-    clickedFeature = feature; 
+    clickedFeature = feature;   // lưu lại feature vừa click
     const coordinates = feature.getGeometry().getCoordinates(); 
     const properties = feature.getProperties();
-    delete properties.geometry;
-
+    delete properties.geometry;// loại bỏ phần geometry không cần hiển thị
+    // Xây dựng HTML bảng thông tin
     let html = '<table style="width:100%; border-collapse: collapse;">';
     const fieldsToShow = ['ten', 'dia_chi','khu_vuc','so_dien_th','mo_hinh','suc_chua_max','gia_max', 'thoi_gian', 'danh_gia']; 
     fieldsToShow.forEach((key) => {
@@ -214,7 +208,6 @@ map.on('singleclick', function (evt) {
         </tr>`;
     });
     html += '</table>';
-
 //thêm ảnh 
     const imageUrl = properties.hinh_anh;
     if (imageUrl) {
@@ -232,10 +225,10 @@ map.on('singleclick', function (evt) {
         🔍 Chỉ đường
       </button>
     </div>`;
-    showSidebarInfo(properties);      //  gọi sidebar
-    popupOverlay.setPosition(undefined);
+    showSidebarInfo(properties);     //  Hiển thị sidebar (thay vì popup)
+    popupOverlay.setPosition(undefined);    // ẩn popupOverlay nếu trước đó có bật
   } else {
-    popupOverlay.setPosition(undefined);
+    popupOverlay.setPosition(undefined); // ẩn popup
     const sb = document.getElementById('sidebar-info');
     if (sb) sb.style.display = 'none';// ẩn sidebar
   }
@@ -862,7 +855,7 @@ if (localStorage.getItem('role') === 'user') {
   if (userBtn) userBtn.style.display = 'none';
   if (restBtn) restBtn.style.display = 'none';
 }
-/* ---------- SIDEBAR HIỂN THỊ THÔNG TIN ---------- */
+// SIDEBAR HIỂN THỊ THÔNG TIN
 function showSidebarInfo(properties) {
   const sidebar   = document.getElementById('sidebar-info');
   const container = document.getElementById('sidebar-content');
